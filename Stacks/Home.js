@@ -7,7 +7,6 @@ export default function Home({navigation}) {
   const [loading, setLoading] = useState(true)
   const [recipes, setRecipes] = useState([]);
   const [title, setTitle]     = useState('Recipes')
-  
   //https://api.spoonacular.com/recipes/4632/summary?apiKey=${apiKey}
    const getAllRecipes = async () => {
       setRecipes([]) 
@@ -15,6 +14,7 @@ export default function Home({navigation}) {
        try{
           let response = await fetch(`https://api.spoonacular.com/recipes/complexSearch?query=pasta&apiKey=${apiKey}`)
           let data   = await response.json();
+          console.log(data)
           let result = data.results
           setRecipes(result) 
           setTitle('All recipes')     

@@ -1,14 +1,15 @@
 import React, {useState, useEffect} from 'react'
-import { View, Text, StyleSheet, Button, ScrollView} from 'react-native'
+import { View, Text, StyleSheet, Button, ScrollView, TouchableOpacity, SafeAreaView} from 'react-native'
 import { StatusBar } from 'expo-status-bar';
-import TriedRecipes from '../components/TriedRecipes'
 import AsyncStorage from '@react-native-async-storage/async-storage';
+
 
 
 const Recipes = ({route, navigation}) => {
   const [recipes, setRecipes] = useState([]);
   const [title, setTitle] = useState('Recipes');
-  const [triedTitles, setTriedTitles] = useState([])
+  const [thisMonthTitles, setThisMonthTitles] = useState([])
+  const [doneTitles, setDoneTitles] = useState([])
 
   useEffect(() => {
     
@@ -23,21 +24,27 @@ const Recipes = ({route, navigation}) => {
       const keys = await AsyncStorage.getAllKeys()
       const data  = await AsyncStorage.multiGet(keys)
       console.log(data)
-      const titlesFromStorage = [];
+      const thisMonthTitles = [];
+      const doneTitles = [];
       data.map((item) => {
+        let validator = item[1]
         let title = item[0]
-        titlesFromStorage.push(title)
+        if(validator === 'done'){
+          doneTitles.push(title)
+        }else{
+          thisMonthTitles.push(title)
+        }
       })
-      setTriedTitles(titlesFromStorage)
+      setDoneTitles(doneTitles);
+      setThisMonthTitles(thisMonthTitles);
       
     } catch (error) {
       console.log(error)
     }
   }
-  const setItem = async (title) => {
-    console.log(title)
+  const setItem = async (key, value) => {
     try {
-      await AsyncStorage.setItem(title, title)
+      await AsyncStorage.setItem(key, value)
       console.log('data saved')
     } catch (error) {
       console.log(error)
@@ -67,68 +74,73 @@ const Recipes = ({route, navigation}) => {
   
 
   return (
-    <ScrollView style={styles.container}>
+    <SafeAreaView style={{flex:1}}>
+      <ScrollView style={styles.container}>
+
       <Text style={styles.title}>{title}</Text>
-      {/* <Text>Rendered</Text> */}
       <View style={styles.recipeContainer}>
       {recipes.map((recipe) => {
-        // console.log(recipe.title)
         if(recipe.title.length > 20){
-          let text = recipe.title.substring(0, 20)
-          text += '(...)';
-          
+          recipe.title = recipe.title.substring(0, 20)
+          recipe.title += '...';
+        }
           return(
             <View style={styles.recipeItem}>
-                <Text>{text}</Text>
+                <TouchableOpacity
+                onPress={() => {
+                  navigation.navigate('Recipe', {
+                    itemId: recipe.id
+                  })
+                }}
+                >
+                  <Text>{recipe.title}</Text>
+                </TouchableOpacity>
                 <Button 
-                  title="More info" 
+                  title="This month"
                   onPress={() => {
-                    navigation.navigate('Recipe', {
-                      itemId: recipe.id
-                    })
+                    setItem(recipe.title, 'thisMonth')
+                    getAllData()
                   }}
                   />
-                <Button 
-                  title="Done"
-                  onPress={() => {
-                    setItem(recipe.title)
-                    getAllData()
-                    }}
-                  />
               </View>
-
-
-            )
-        }else{
-          return(
+          )
+      })}
+      </View>
+      <View>
+        <Text style={styles.title}>Recipes to try this month:</Text>
+        
+        {thisMonthTitles.map((title) => {
+          if(title.length > 20){
+            title = title.substring(0, 20)
+            title += '...'
+          }
+          return (
             <View style={styles.recipeItem}>
-                <Text>{recipe.title}</Text>
-                <Button 
-                  title="More info" 
-                  onPress={() => {
-                    navigation.navigate('Recipe', {
-                      itemId: recipe.id
-                    })
-                  }}
-                  />
-                <Button 
-                  title="Done" 
-                  onPress={() => {
-                    setItem(recipe.title)
-                    getAllData()
-                    }}/>
+              <View style={styles.recipeTitleContainer}>
+                <Text>{title}</Text>
               </View>
-              
-
+                <Button 
+                title='Reset'
+                onPress={() => {
+                  console.log(title)
+                  deleteItem(title)
+                }}
+                />
+                <Button 
+                title='Done'
+                onPress={() => {
+                  setItem(title, 'done')
+                  getAllData()
+                }}
+                />
+              </View>
             )
-        }
-        }
-      
-      )}
+          })}
+
       </View>
       <View> 
-          <Text style={styles.title}>TRIED RECIPES</Text>
-          {triedTitles.map((title) => {
+          <Text style={styles.title}>Has been done</Text>
+          {doneTitles.map((title) => {
             return (
               <View style={styles.recipeItem}>
                 <Text>{title}</Text>
@@ -148,7 +160,9 @@ const Recipes = ({route, navigation}) => {
           />
         </View>
       <StatusBar style="auto" /> 
-  </ScrollView>
+    <View style={styles.paddingView}></View>
+    </ScrollView>
+  </SafeAreaView>
   )
 }
 
@@ -158,10 +172,10 @@ const styles = StyleSheet.create({
   container: {
     padding:20,
     paddingTop: 60,
-    paddingBottom: 100,
     flex: 1,
     backgroundColor: 'white', //#F67AD4
     // alignItems: 'center',
+    height:1000
   
   },
   title: {
@@ -189,5 +203,11 @@ const styles = StyleSheet.create({
     borderRadius: 5,
     color: 'black',
     marginTop:10
+  },
+  paddingView:{
+    padding: 50,
+  },
+  recipeTitleContainer: {
+    width:'50%'
   }
 });
