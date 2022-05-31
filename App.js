@@ -2,7 +2,8 @@ import { NavigationContainer } from "@react-navigation/native";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import Home from "./Stacks/Home";
 import Recipe from "./Stacks/Recipe"
-import Tried from "./Stacks/Tried";
+import Recipes from "./components/Recipes";
+
 const Stack = createNativeStackNavigator();
 
 export default function App() {
@@ -21,8 +22,8 @@ export default function App() {
       }}
       initialRouteName='Home'
       >
-        <Stack.Screen name="Recipes" component={Home}/>
-        <Stack.Screen name="Tried" component={Tried}/>
+        <Stack.Screen name="Home" component={Home}/>
+        <Stack.Screen name="Recipes" component={Recipes}/>
         <Stack.Screen name="Recipe" component={Recipe}/>
       </Stack.Navigator>
     </NavigationContainer>
